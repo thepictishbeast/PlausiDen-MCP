@@ -1,25 +1,43 @@
 [package]
 name = "plausiden-mcp"
 version = "0.1.0"
-edition = "2024"
-license = "BSL-1.1"
-description = "Model Context Protocol server for the PlausiDen ecosystem"
-repository = "https://github.com/redcaptian1917/PlausiDen-MCP"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/redcaptian1917/plausiden-mcp"
+description = "MCP server exposing PlausiDen's plausible deniability engine to any MCP client"
+
+[[bin]]
+name = "plausiden-mcp"
+path = "src/main.rs"
+
+[lib]
+name = "plausiden_mcp"
+path = "src/lib.rs"
 
 [dependencies]
+tokio = { version = "1", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-tokio = { version = "1", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
+blake3 = "1"
+chacha20poly1305 = "0.10"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 thiserror = "2"
+dashmap = "6"
 clap = { version = "4", features = ["derive"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+rand = "0.8"
 
-anyhow = "1"
+# Optional transports
+axum = { version = "0.7", optional = true }
+tower = { version = "0.5", optional = true }
+tower-http = { version = "0.6", features = ["cors", "trace"], optional = true }
 
-# MCP protocol
-async-trait = "0.1"
+[features]
+default = ["stdio"]
+stdio = []
+http = ["axum", "tower", "tower-http"]
 
-# PlausiDen crates (will be path deps during development)
-# engine-core = { path = "../PlausiDen-Engine/engine-core" }
-# engine-browser = { path = "../PlausiDen-Engine/engine-browser" }
+[dev-dependencies]
+tempfile = "3"
