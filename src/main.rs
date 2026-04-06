@@ -2,6 +2,8 @@
 //!
 //! Runs the MCP server on stdio by default. Use `--transport http` for HTTP.
 
+#![forbid(unsafe_code)]
+
 use std::sync::Arc;
 
 use clap::Parser;
