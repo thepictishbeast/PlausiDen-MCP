@@ -158,12 +158,30 @@ async fn messages(
 mod tests {
     use super::*;
     use crate::config::ServerConfig;
+    use axum::{
+        body::{to_bytes, Body},
+        http::{Method, Request, StatusCode},
+    };
+    use tower::ServiceExt; // for `oneshot`
+
+    /// Build a fresh McpServer + router pair for a single test.
+    fn fixture() -> Router {
+        let server = Arc::new(McpServer::new(ServerConfig::default()));
+        router(server)
+    }
+
+    /// Drain a response body into bytes for assertion.
+    async fn body_bytes(resp: axum::response::Response) -> Vec<u8> {
+        to_bytes(resp.into_body(), MAX_BODY_BYTES + 1)
+            .await
+            .expect("body collected")
+            .to_vec()
+    }
 
     /// Pass 1 (Existence Proof): the router builds with a fresh McpServer.
     #[test]
     fn router_constructs_with_default_server() {
-        let server = Arc::new(McpServer::new(ServerConfig::default()));
-        let _router = router(server);
+        let _router = fixture();
     }
 
     /// Pass 3 (Boundary): the maximum body size constant is sane.
@@ -177,5 +195,153 @@ mod tests {
     fn bind_addr_is_loopback() {
         let addr: SocketAddr = BIND_ADDR.parse().expect("valid socket addr");
         assert!(addr.ip().is_loopback(), "BIND_ADDR must be loopback");
+    }
+
+    /// Pass 1 (Existence Proof): GET /health returns 200 with the expected
+    /// service identity. This is the liveness probe used by uptime monitors,
+    /// so it must work without any capability gating or McpServer state read.
+    #[tokio::test]
+    async fn health_returns_200_with_service_identity() {
+        let app = fixture();
+        let req = Request::builder()
+            .method(Method::GET)
+            .uri("/health")
+            .body(Body::empty())
+            .expect("request built");
+
+        let resp = app.oneshot(req).await.expect("oneshot ok");
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = body_bytes(resp).await;
+        let json: Value = serde_json::from_slice(&body).expect("body is JSON");
+        assert_eq!(json["status"], "ok");
+        assert_eq!(json["service"], env!("CARGO_PKG_NAME"));
+        assert_eq!(json["version"], env!("CARGO_PKG_VERSION"));
+    }
+
+    /// Pass 2 (Null Path): an empty POST /messages body must return a
+    /// JSON-RPC parse error (-32700) over HTTP 200, NOT a 4xx or 500.
+    /// Per JSON-RPC 2.0 convention, parse errors are wrapped in a normal
+    /// response envelope so the client can handle them uniformly.
+    #[tokio::test]
+    async fn messages_empty_body_returns_jsonrpc_parse_error() {
+        let app = fixture();
+        let req = Request::builder()
+            .method(Method::POST)
+            .uri("/messages")
+            .header("content-type", "application/json")
+            .body(Body::empty())
+            .expect("request built");
+
+        let resp = app.oneshot(req).await.expect("oneshot ok");
+        assert_eq!(
+            resp.status(),
+            StatusCode::OK,
+            "JSON-RPC parse errors must use HTTP 200, not 4xx/5xx"
+        );
+
+        let body = body_bytes(resp).await;
+        let json: Value = serde_json::from_slice(&body).expect("body is JSON");
+        assert_eq!(json["jsonrpc"], "2.0");
+        assert_eq!(
+            json["error"]["code"], -32700,
+            "JSON-RPC 2.0 parse error code is -32700"
+        );
+    }
+
+    /// Pass 4 (Error Path): malformed JSON in POST /messages must surface as
+    /// a JSON-RPC parse error (-32700), NOT an HTTP 500 panic. The transport
+    /// is responsible for catching every deserialization failure and turning
+    /// it into a structured envelope.
+    #[tokio::test]
+    async fn messages_malformed_json_returns_jsonrpc_parse_error() {
+        let app = fixture();
+        let req = Request::builder()
+            .method(Method::POST)
+            .uri("/messages")
+            .header("content-type", "application/json")
+            .body(Body::from("{this is not valid json"))
+            .expect("request built");
+
+        let resp = app.oneshot(req).await.expect("oneshot ok");
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = body_bytes(resp).await;
+        let json: Value = serde_json::from_slice(&body).expect("body is JSON");
+        assert_eq!(json["error"]["code"], -32700);
+        // The error message should reference parse failure, not panic.
+        assert!(
+            json["error"]["message"]
+                .as_str()
+                .is_some_and(|s| s.contains("Parse error")),
+            "expected 'Parse error' in error.message, got: {}",
+            json["error"]["message"]
+        );
+    }
+
+    /// Pass 3 (Boundary): a body that exceeds MAX_BODY_BYTES must be
+    /// rejected with HTTP 413 PAYLOAD_TOO_LARGE before deserialization is
+    /// attempted. This bounds memory consumption per request — without
+    /// this, an attacker could OOM the server with a single large POST.
+    #[tokio::test]
+    async fn messages_oversized_body_returns_413() {
+        let app = fixture();
+        // 1 MiB + 1 byte — just past the limit.
+        let oversized = vec![b'x'; MAX_BODY_BYTES + 1];
+        let req = Request::builder()
+            .method(Method::POST)
+            .uri("/messages")
+            .header("content-type", "application/json")
+            .body(Body::from(oversized))
+            .expect("request built");
+
+        let resp = app.oneshot(req).await.expect("oneshot ok");
+        assert_eq!(resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
+
+        let body = body_bytes(resp).await;
+        let json: Value = serde_json::from_slice(&body).expect("body is JSON");
+        assert_eq!(json["max_bytes"], MAX_BODY_BYTES);
+        assert!(json["error"].as_str().is_some());
+    }
+
+    /// Pass 1 (Existence Proof): a valid JSON-RPC `initialize` request
+    /// round-trips through the router and returns a well-formed
+    /// JSON-RPC 2.0 response. This is the smoke test that the
+    /// HTTP↔McpServer wiring is end-to-end correct.
+    #[tokio::test]
+    async fn messages_initialize_roundtrips_to_mcp_server() {
+        let app = fixture();
+        let body = serde_json::to_vec(&json!({
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {},
+                "clientInfo": { "name": "http-test", "version": "0.0.0" }
+            }
+        }))
+        .expect("body serialized");
+
+        let req = Request::builder()
+            .method(Method::POST)
+            .uri("/messages")
+            .header("content-type", "application/json")
+            .body(Body::from(body))
+            .expect("request built");
+
+        let resp = app.oneshot(req).await.expect("oneshot ok");
+        assert_eq!(resp.status(), StatusCode::OK);
+
+        let body = body_bytes(resp).await;
+        let json: Value = serde_json::from_slice(&body).expect("body is JSON");
+        assert_eq!(json["jsonrpc"], "2.0");
+        assert_eq!(json["id"], 1);
+        // initialize must return a result, not an error.
+        assert!(
+            json.get("result").is_some(),
+            "initialize should return a result envelope, got: {json}"
+        );
+        assert!(json.get("error").is_none());
     }
 }
