@@ -290,9 +290,9 @@ mod tests {
         store.enable(Capability::Generate, None).unwrap();
         store.enable(Capability::Query, None).unwrap();
         let snap = store.snapshot();
-        assert_eq!(snap[&Capability::Generate], true);
-        assert_eq!(snap[&Capability::Query], true);
-        assert_eq!(snap[&Capability::Inject], false);
-        assert_eq!(snap[&Capability::Swarm], false);
+        assert!(snap[&Capability::Generate]);
+        assert!(snap[&Capability::Query]);
+        assert!(!snap[&Capability::Inject]);
+        assert!(!snap[&Capability::Swarm]);
     }
 }
