@@ -77,3 +77,42 @@
 - Integration with plausiden-swarm for P2P network participation
 - HTTP+SSE transport for web-based MCP clients
 - Embedded mode for SacredVote-Desktop (Tauri app embeds MCP server)
+
+---
+
+## Out of Scope
+
+Per v1.2 §G.3. MCP is the **AI-agent-to-engine integration layer**.
+It exposes capability-gated tools through JSON-RPC 2.0. It does NOT:
+
+- **Implement data generation itself.** All Generate tools delegate
+  to `plausiden-engine` (currently stubbed); MCP never synthesizes
+  browsing history, contacts, or network traffic in this crate.
+- **Write to OS data stores.** Inject tools are stubs pending
+  `plausiden-inject` integration. When live, the writes happen in
+  plausiden-inject — MCP is the dispatcher, not the driver.
+- **Run a P2P network.** Swarm tools delegate to
+  `plausiden-swarm`. MCP's role is capability-gating + audit, not
+  packet relay.
+- **Protect against a malicious MCP client.** The client is
+  trusted as the user's agent. An attacker with control of Claude
+  Code, Cursor, or a custom client can invoke any enabled
+  capability. Threat model covers the server, not the client.
+- **Encrypt the audit log at rest.** The blake3 hash chain is
+  tamper-EVIDENT, not tamper-proof. An adversary with read + write
+  access to `~/.local/share/plausiden-mcp/audit.log` can truncate
+  or replay but cannot silently modify history without breaking
+  the chain. Future: age-encrypt the log.
+- **Protect against a compromised host OS.** If the kernel or
+  user account is compromised, MCP's capability gating is moot.
+  See `plausiden-desktop` / `plausiden-os-for-mobile` for the
+  Tier-2/3 pathways that handle that threat model.
+- **Provide a UI.** MCP is an integration LAYER. The UI is
+  whatever MCP client the user runs (Claude Code, Cursor, a
+  future Tauri-embedded client).
+- **Act as a general-purpose RPC framework.** MCP implements a
+  specific JSON-RPC 2.0 protocol per the Model Context Protocol
+  spec. Custom protocols belong in separate crates.
+
+Scope creep in any of these directions would blur the capability
+model that MCP exists to enforce.
