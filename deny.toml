@@ -1,0 +1,51 @@
+# cargo-deny configuration — PlausiDen MCP (Model Context Protocol
+# integration layer for AI agents consuming engine / inject / swarm).
+#
+# Uniform PlausiDen policy (authored 2026-04-19, Claude 3):
+# - vulnerability=deny, unmaintained/unsound/yanked=warn.
+# - deny unlicensed + copyleft; allow permissive set.
+# - Every dep must come from crates.io.
+# - rustls-first posture — no openssl / native-tls / curl / git2.
+#
+# MCP-specific concern: this is the bridge between AI agents and
+# destructive PlausiDen capabilities (Inject, Swarm). A compromised
+# dep here could bypass the capability gating in src/auth.rs. Hold
+# the bar especially high when adding deps.
+
+[advisories]
+vulnerability = "deny"
+unmaintained = "warn"
+unsound = "warn"
+yanked = "warn"
+
+[licenses]
+unlicensed = "deny"
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "BSL-1.0",
+    "CC0-1.0",
+    "Zlib",
+]
+copyleft = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+
+[bans]
+multiple-versions = "warn"
+deny = [
+    { name = "openssl-sys" },
+    { name = "openssl" },
+    { name = "native-tls" },
+    { name = "git2" },
+    { name = "curl" },
+    { name = "curl-sys" },
+]
