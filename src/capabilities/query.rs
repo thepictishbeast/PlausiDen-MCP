@@ -31,7 +31,10 @@ pub async fn status(_args: &Value, server: &McpServer) -> Result<Value, String> 
 
 /// Query the audit trail.
 pub async fn audit_log(args: &Value, server: &McpServer) -> Result<Value, String> {
-    let from_seq = args.get("from_sequence").and_then(|v| v.as_u64()).unwrap_or(0);
+    let from_seq = args
+        .get("from_sequence")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
     let limit = args.get("limit").and_then(|v| v.as_u64()).unwrap_or(50) as usize;
 
     let entries = server.audit.entries_from(from_seq);

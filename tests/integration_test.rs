@@ -37,7 +37,11 @@ async fn test_tools_list() {
 
     let result = resp.result.unwrap();
     let tools = result["tools"].as_array().unwrap();
-    assert!(tools.len() >= 20, "Should have 20+ tools, got {}", tools.len());
+    assert!(
+        tools.len() >= 20,
+        "Should have 20+ tools, got {}",
+        tools.len()
+    );
 
     // Verify system tools are present.
     let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
@@ -256,7 +260,10 @@ async fn test_disable_capability() {
     let server = make_server();
 
     // Enable then disable.
-    server.capabilities.enable(Capability::Generate, None).unwrap();
+    server
+        .capabilities
+        .enable(Capability::Generate, None)
+        .unwrap();
     assert!(server.capabilities.is_enabled(Capability::Generate));
 
     let req = make_request(
@@ -286,5 +293,7 @@ async fn test_denied_call_audited() {
     let _resp = server.handle_request(req).await;
 
     let entries = server.audit.entries();
-    assert!(entries.iter().any(|e| matches!(&e.event, AuditEvent::ToolDenied { .. })));
+    assert!(entries
+        .iter()
+        .any(|e| matches!(&e.event, AuditEvent::ToolDenied { .. })));
 }

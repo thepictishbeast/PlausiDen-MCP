@@ -6,7 +6,7 @@
 
 pub mod generate;
 pub mod inject;
-pub mod swarm;
 pub mod profile;
 pub mod query;
+pub mod swarm;
 pub mod system;

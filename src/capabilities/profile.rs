@@ -10,8 +10,14 @@ pub const REQUIRED: Capability = Capability::ProfileManagement;
 
 /// Create a new profile from a preset base.
 pub async fn profile_create(args: &Value, _server: &McpServer) -> Result<Value, String> {
-    let name = args.get("name").and_then(|v| v.as_str()).unwrap_or("default");
-    let preset = args.get("preset").and_then(|v| v.as_str()).unwrap_or("casual");
+    let name = args
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
+    let preset = args
+        .get("preset")
+        .and_then(|v| v.as_str())
+        .unwrap_or("casual");
 
     Ok(serde_json::json!({
         "status": "created",
@@ -36,7 +42,10 @@ pub async fn profile_list(_args: &Value, _server: &McpServer) -> Result<Value, S
 
 /// Switch the active profile.
 pub async fn profile_switch(args: &Value, _server: &McpServer) -> Result<Value, String> {
-    let name = args.get("name").and_then(|v| v.as_str()).unwrap_or("default");
+    let name = args
+        .get("name")
+        .and_then(|v| v.as_str())
+        .unwrap_or("default");
 
     Ok(serde_json::json!({
         "status": "switched",

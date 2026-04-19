@@ -3,7 +3,7 @@
 use serde_json::Value;
 
 use crate::auth::Capability;
-use crate::capabilities::{generate, inject, swarm, profile, query, system};
+use crate::capabilities::{generate, inject, profile, query, swarm, system};
 use crate::server::McpServer;
 
 /// Get the required capability for a tool, or None if the tool is always available.
@@ -24,24 +24,24 @@ pub fn required_capability(tool_name: &str) -> Option<Capability> {
         | "plausiden_generate_network" => Some(generate::REQUIRED),
 
         // Inject tools.
-        "plausiden_inject_browser"
-        | "plausiden_inject_filesystem"
-        | "plausiden_inject_logs" => Some(inject::REQUIRED),
+        "plausiden_inject_browser" | "plausiden_inject_filesystem" | "plausiden_inject_logs" => {
+            Some(inject::REQUIRED)
+        }
 
         // Swarm tools.
-        "plausiden_swarm_join"
-        | "plausiden_swarm_leave"
-        | "plausiden_swarm_status" => Some(swarm::REQUIRED),
+        "plausiden_swarm_join" | "plausiden_swarm_leave" | "plausiden_swarm_status" => {
+            Some(swarm::REQUIRED)
+        }
 
         // Profile tools.
-        "plausiden_profile_create"
-        | "plausiden_profile_list"
-        | "plausiden_profile_switch" => Some(profile::REQUIRED),
+        "plausiden_profile_create" | "plausiden_profile_list" | "plausiden_profile_switch" => {
+            Some(profile::REQUIRED)
+        }
 
         // Query tools.
-        "plausiden_status"
-        | "plausiden_audit_log"
-        | "plausiden_forensic_weights" => Some(query::REQUIRED),
+        "plausiden_status" | "plausiden_audit_log" | "plausiden_forensic_weights" => {
+            Some(query::REQUIRED)
+        }
 
         // Unknown tool.
         _ => None,
@@ -49,11 +49,7 @@ pub fn required_capability(tool_name: &str) -> Option<Capability> {
 }
 
 /// Dispatch a tool call to its handler.
-pub async fn dispatch(
-    tool_name: &str,
-    args: &Value,
-    server: &McpServer,
-) -> Result<Value, String> {
+pub async fn dispatch(tool_name: &str, args: &Value, server: &McpServer) -> Result<Value, String> {
     match tool_name {
         // System.
         "plausiden_enable_capability" => system::enable_capability(args, server).await,
@@ -61,7 +57,9 @@ pub async fn dispatch(
         "plausiden_list_capabilities" => system::list_capabilities(args, server).await,
 
         // Generate.
-        "plausiden_generate_browser_history" => generate::generate_browser_history(args, server).await,
+        "plausiden_generate_browser_history" => {
+            generate::generate_browser_history(args, server).await
+        }
         "plausiden_generate_cookies" => generate::generate_cookies(args, server).await,
         "plausiden_generate_searches" => generate::generate_searches(args, server).await,
         "plausiden_generate_files" => generate::generate_files(args, server).await,

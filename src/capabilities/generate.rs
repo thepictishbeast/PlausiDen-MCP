@@ -11,7 +11,10 @@ pub const REQUIRED: Capability = Capability::Generate;
 /// Generate browser history entries with referrer chains.
 pub async fn generate_browser_history(args: &Value, _server: &McpServer) -> Result<Value, String> {
     let count = args.get("count").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
-    let profile = args.get("profile").and_then(|v| v.as_str()).unwrap_or("casual");
+    let profile = args
+        .get("profile")
+        .and_then(|v| v.as_str())
+        .unwrap_or("casual");
 
     let mut entries = Vec::new();
     for i in 0..count {

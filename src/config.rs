@@ -1,7 +1,7 @@
 //! Server configuration — resource limits, transport settings, paths.
 
-use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 /// Resource limits to prevent runaway generation or injection.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -22,8 +22,8 @@ impl Default for ResourceLimits {
     fn default() -> Self {
         Self {
             max_artifacts_per_minute: 100,
-            max_injection_bytes: 100 * 1024 * 1024,       // 100 MB
-            max_swarm_storage_bytes: 500 * 1024 * 1024,    // 500 MB
+            max_injection_bytes: 100 * 1024 * 1024, // 100 MB
+            max_swarm_storage_bytes: 500 * 1024 * 1024, // 500 MB
             max_swarm_bandwidth_per_hour: 50 * 1024 * 1024, // 50 MB
             max_concurrent_tasks: 4,
         }

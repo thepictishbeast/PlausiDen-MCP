@@ -14,9 +14,9 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use crate::audit::{AuditEvent, AuditLog};
 use crate::auth::CapabilityStore;
 use crate::config::ServerConfig;
-use crate::tools;
-use crate::resources;
 use crate::prompts;
+use crate::resources;
+use crate::tools;
 
 /// The MCP server. Holds shared state for capability checks, audit logging,
 /// and tool dispatch.
@@ -53,17 +53,11 @@ impl McpServer {
 
             let response = match serde_json::from_str::<JsonRpcRequest>(&line) {
                 Ok(request) => server.handle_request(request).await,
-                Err(e) => JsonRpcResponse::error(
-                    Value::Null,
-                    -32700,
-                    format!("Parse error: {e}"),
-                ),
+                Err(e) => JsonRpcResponse::error(Value::Null, -32700, format!("Parse error: {e}")),
             };
 
             let response_bytes = serde_json::to_string(&response)?;
-            stdout
-                .write_all(response_bytes.as_bytes())
-                .await?;
+            stdout.write_all(response_bytes.as_bytes()).await?;
             stdout.write_all(b"\n").await?;
             stdout.flush().await?;
         }
@@ -85,7 +79,9 @@ impl McpServer {
             "resources/read" => self.handle_resources_read(id, request.params),
             "prompts/list" => self.handle_prompts_list(id),
             "prompts/get" => self.handle_prompts_get(id, request.params),
-            _ => JsonRpcResponse::error(id, -32601, format!("Method not found: {}", request.method)),
+            _ => {
+                JsonRpcResponse::error(id, -32601, format!("Method not found: {}", request.method))
+            }
         }
     }
 
@@ -186,10 +182,7 @@ impl McpServer {
     /// Read a specific resource.
     fn handle_resources_read(&self, id: Value, params: Option<Value>) -> JsonRpcResponse {
         let params = params.unwrap_or(Value::Null);
-        let uri = params
-            .get("uri")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let uri = params.get("uri").and_then(|v| v.as_str()).unwrap_or("");
 
         match resources::read_resource(uri, self) {
             Ok(content) => {
@@ -216,10 +209,7 @@ impl McpServer {
     /// Get a specific prompt.
     fn handle_prompts_get(&self, id: Value, params: Option<Value>) -> JsonRpcResponse {
         let params = params.unwrap_or(Value::Null);
-        let name = params
-            .get("name")
-            .and_then(|v| v.as_str())
-            .unwrap_or("");
+        let name = params.get("name").and_then(|v| v.as_str()).unwrap_or("");
 
         let arguments: HashMap<String, String> = params
             .get("arguments")

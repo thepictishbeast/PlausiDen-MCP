@@ -14,7 +14,10 @@ pub const REQUIRED: Capability = Capability::Swarm;
 /// Join the P2P swarm network.
 pub async fn swarm_join(args: &Value, _server: &McpServer) -> Result<Value, String> {
     let max_peers = args.get("max_peers").and_then(|v| v.as_u64()).unwrap_or(50);
-    let max_storage_mb = args.get("max_storage_mb").and_then(|v| v.as_u64()).unwrap_or(500);
+    let max_storage_mb = args
+        .get("max_storage_mb")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(500);
 
     Ok(serde_json::json!({
         "status": "stub",

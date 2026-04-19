@@ -28,12 +28,12 @@
 
 #![forbid(unsafe_code)]
 
-pub mod auth;
 pub mod audit;
-pub mod config;
-pub mod server;
+pub mod auth;
 pub mod capabilities;
-pub mod tools;
-pub mod resources;
+pub mod config;
 pub mod prompts;
+pub mod resources;
+pub mod server;
+pub mod tools;
 pub mod transport;

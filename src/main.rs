@@ -13,7 +13,11 @@ use plausiden_mcp::config::ServerConfig;
 use plausiden_mcp::server::McpServer;
 
 #[derive(Parser)]
-#[command(name = "plausiden-mcp", version, about = "PlausiDen MCP Server — plausible deniability engine for any MCP client")]
+#[command(
+    name = "plausiden-mcp",
+    version,
+    about = "PlausiDen MCP Server — plausible deniability engine for any MCP client"
+)]
 struct Cli {
     /// Transport to use: stdio or http.
     #[arg(long, default_value = "stdio")]

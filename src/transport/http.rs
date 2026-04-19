@@ -144,11 +144,7 @@ async fn messages(
 
     let response: JsonRpcResponse = match serde_json::from_slice::<JsonRpcRequest>(&body) {
         Ok(request) => server.handle_request(request).await,
-        Err(e) => JsonRpcResponse::error(
-            Value::Null,
-            -32700,
-            format!("Parse error: {e}"),
-        ),
+        Err(e) => JsonRpcResponse::error(Value::Null, -32700, format!("Parse error: {e}")),
     };
 
     (StatusCode::OK, Json(response)).into_response()

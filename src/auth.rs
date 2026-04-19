@@ -51,12 +51,8 @@ impl Capability {
     /// The acknowledgment string required to enable dangerous capabilities.
     pub fn acknowledgment_string(&self) -> Option<&'static str> {
         match self {
-            Capability::Inject => {
-                Some("I understand this will modify real data on disk")
-            }
-            Capability::Swarm => {
-                Some("I understand this will open network connections")
-            }
+            Capability::Inject => Some("I understand this will modify real data on disk"),
+            Capability::Swarm => Some("I understand this will open network connections"),
             _ => None,
         }
     }
@@ -64,9 +60,13 @@ impl Capability {
     /// Human-readable description of what this capability grants.
     pub fn description(&self) -> &'static str {
         match self {
-            Capability::Generate => "Generate synthetic data in memory (no disk writes, no network)",
+            Capability::Generate => {
+                "Generate synthetic data in memory (no disk writes, no network)"
+            }
             Capability::Query => "Read-only queries: status, statistics, audit log",
-            Capability::ProfileManagement => "Create, list, and switch user profiles (writes config only)",
+            Capability::ProfileManagement => {
+                "Create, list, and switch user profiles (writes config only)"
+            }
             Capability::Schedule => "Start/stop background generation (persistent process)",
             Capability::Inject => "Inject artifacts into OS data stores (MODIFIES REAL DATA)",
             Capability::Swarm => "Join/leave P2P swarm network (OPENS NETWORK CONNECTIONS)",
@@ -145,11 +145,7 @@ impl CapabilityStore {
 
     /// Enable a capability. For Inject and Swarm, the caller must provide
     /// the correct acknowledgment string.
-    pub fn enable(
-        &self,
-        cap: Capability,
-        acknowledgment: Option<&str>,
-    ) -> Result<(), AuthError> {
+    pub fn enable(&self, cap: Capability, acknowledgment: Option<&str>) -> Result<(), AuthError> {
         if cap.requires_acknowledgment() {
             let required = cap
                 .acknowledgment_string()
@@ -219,16 +215,20 @@ mod tests {
     fn test_inject_requires_acknowledgment() {
         let store = CapabilityStore::new();
         let err = store.enable(Capability::Inject, None).unwrap_err();
-        assert!(matches!(err, AuthError::AcknowledgmentRequired(Capability::Inject, _)));
+        assert!(matches!(
+            err,
+            AuthError::AcknowledgmentRequired(Capability::Inject, _)
+        ));
     }
 
     #[test]
     fn test_inject_wrong_acknowledgment() {
         let store = CapabilityStore::new();
-        let err = store
-            .enable(Capability::Inject, Some("wrong"))
-            .unwrap_err();
-        assert!(matches!(err, AuthError::InvalidAcknowledgment(Capability::Inject, _)));
+        let err = store.enable(Capability::Inject, Some("wrong")).unwrap_err();
+        assert!(matches!(
+            err,
+            AuthError::InvalidAcknowledgment(Capability::Inject, _)
+        ));
     }
 
     #[test]
@@ -247,7 +247,10 @@ mod tests {
     fn test_swarm_requires_acknowledgment() {
         let store = CapabilityStore::new();
         let err = store.enable(Capability::Swarm, None).unwrap_err();
-        assert!(matches!(err, AuthError::AcknowledgmentRequired(Capability::Swarm, _)));
+        assert!(matches!(
+            err,
+            AuthError::AcknowledgmentRequired(Capability::Swarm, _)
+        ));
     }
 
     #[test]

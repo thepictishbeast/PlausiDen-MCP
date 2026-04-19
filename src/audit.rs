@@ -57,7 +57,12 @@ pub struct AuditEntry {
 
 impl AuditEntry {
     /// Compute the hash for this entry (excluding the hash field itself).
-    fn compute_hash(sequence: u64, timestamp: &DateTime<Utc>, event: &AuditEvent, prev_hash: &str) -> String {
+    fn compute_hash(
+        sequence: u64,
+        timestamp: &DateTime<Utc>,
+        event: &AuditEvent,
+        prev_hash: &str,
+    ) -> String {
         let payload = format!(
             "{}:{}:{}:{}",
             sequence,
@@ -94,10 +99,7 @@ impl AuditLog {
         let mut entries = self.entries.write().expect("audit lock poisoned");
         let sequence = entries.len() as u64;
         let timestamp = Utc::now();
-        let prev_hash = entries
-            .last()
-            .map(|e| e.hash.clone())
-            .unwrap_or_default();
+        let prev_hash = entries.last().map(|e| e.hash.clone()).unwrap_or_default();
 
         let hash = AuditEntry::compute_hash(sequence, &timestamp, &event, &prev_hash);
 
@@ -155,8 +157,12 @@ impl AuditLog {
             }
 
             // Verify the entry's own hash.
-            let expected =
-                AuditEntry::compute_hash(entry.sequence, &entry.timestamp, &entry.event, &entry.prev_hash);
+            let expected = AuditEntry::compute_hash(
+                entry.sequence,
+                &entry.timestamp,
+                &entry.event,
+                &entry.prev_hash,
+            );
             if entry.hash != expected {
                 return Err(entry.sequence);
             }
@@ -242,11 +248,15 @@ mod tests {
         assert_eq!(entries.len(), 2);
         assert!(matches!(
             &entries[0].event,
-            AuditEvent::CapabilityEnabled { capability: Capability::Inject }
+            AuditEvent::CapabilityEnabled {
+                capability: Capability::Inject
+            }
         ));
         assert!(matches!(
             &entries[1].event,
-            AuditEvent::CapabilityDisabled { capability: Capability::Inject }
+            AuditEvent::CapabilityDisabled {
+                capability: Capability::Inject
+            }
         ));
     }
 

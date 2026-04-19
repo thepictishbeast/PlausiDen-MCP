@@ -1,7 +1,7 @@
 //! MCP prompts — workflow templates for common use cases.
 
-use std::collections::HashMap;
 use serde_json::Value;
+use std::collections::HashMap;
 
 /// List all available prompts.
 pub fn list_all_prompts() -> Vec<Value> {
@@ -27,10 +27,7 @@ pub fn list_all_prompts() -> Vec<Value> {
 }
 
 /// Get a prompt by name, returning MCP prompt messages.
-pub fn get_prompt(
-    name: &str,
-    arguments: &HashMap<String, String>,
-) -> Result<Vec<Value>, String> {
+pub fn get_prompt(name: &str, arguments: &HashMap<String, String>) -> Result<Vec<Value>, String> {
     match name {
         "quick_start" => Ok(vec![serde_json::json!({
             "role": "user",

@@ -13,8 +13,14 @@ pub const REQUIRED: Capability = Capability::Inject;
 
 /// Inject artifacts into Firefox/Chrome SQLite databases.
 pub async fn inject_browser(args: &Value, _server: &McpServer) -> Result<Value, String> {
-    let browser = args.get("browser").and_then(|v| v.as_str()).unwrap_or("firefox");
-    let strategy = args.get("strategy").and_then(|v| v.as_str()).unwrap_or("direct");
+    let browser = args
+        .get("browser")
+        .and_then(|v| v.as_str())
+        .unwrap_or("firefox");
+    let strategy = args
+        .get("strategy")
+        .and_then(|v| v.as_str())
+        .unwrap_or("direct");
 
     // Stub — real implementation uses plausiden-inject crate to modify browser DBs.
     Ok(serde_json::json!({
@@ -28,7 +34,10 @@ pub async fn inject_browser(args: &Value, _server: &McpServer) -> Result<Value, 
 
 /// Inject files with realistic metadata onto the filesystem.
 pub async fn inject_filesystem(args: &Value, _server: &McpServer) -> Result<Value, String> {
-    let target_dir = args.get("target_dir").and_then(|v| v.as_str()).unwrap_or("/tmp");
+    let target_dir = args
+        .get("target_dir")
+        .and_then(|v| v.as_str())
+        .unwrap_or("/tmp");
 
     Ok(serde_json::json!({
         "status": "stub",
@@ -40,7 +49,10 @@ pub async fn inject_filesystem(args: &Value, _server: &McpServer) -> Result<Valu
 
 /// Inject entries into system logs (journald/syslog).
 pub async fn inject_logs(args: &Value, _server: &McpServer) -> Result<Value, String> {
-    let log_type = args.get("log_type").and_then(|v| v.as_str()).unwrap_or("syslog");
+    let log_type = args
+        .get("log_type")
+        .and_then(|v| v.as_str())
+        .unwrap_or("syslog");
 
     Ok(serde_json::json!({
         "status": "stub",

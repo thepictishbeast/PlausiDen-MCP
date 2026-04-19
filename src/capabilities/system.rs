@@ -26,9 +26,9 @@ pub async fn enable_capability(args: &Value, server: &McpServer) -> Result<Value
         .enable(cap, ack)
         .map_err(|e| e.to_string())?;
 
-    server.audit.record(AuditEvent::CapabilityEnabled {
-        capability: cap,
-    });
+    server
+        .audit
+        .record(AuditEvent::CapabilityEnabled { capability: cap });
 
     Ok(serde_json::json!({
         "status": "enabled",
@@ -48,9 +48,9 @@ pub async fn disable_capability(args: &Value, server: &McpServer) -> Result<Valu
 
     server.capabilities.disable(cap);
 
-    server.audit.record(AuditEvent::CapabilityDisabled {
-        capability: cap,
-    });
+    server
+        .audit
+        .record(AuditEvent::CapabilityDisabled { capability: cap });
 
     Ok(serde_json::json!({
         "status": "disabled",
