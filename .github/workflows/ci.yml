@@ -19,3 +19,13 @@ jobs:
       - run: cargo clippy -- -D warnings
       - run: cargo test
       - run: cargo build --release
+
+  doc:
+    name: cargo doc (strict)
+    runs-on: [self-hosted, linux, x64, plausiden]
+    env:
+      RUSTDOCFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo doc --workspace --no-deps
