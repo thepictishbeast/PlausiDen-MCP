@@ -4,7 +4,7 @@
 
 ```bash
 # Clone
-git clone https://github.com/redcaptian1917/plausiden-mcp.git
+git clone https://github.com/thepictishbeast/plausiden-mcp.git
 cd plausiden-mcp
 
 # Build

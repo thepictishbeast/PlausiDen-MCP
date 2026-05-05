@@ -3,7 +3,7 @@ name = "plausiden-mcp"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-repository = "https://github.com/redcaptian1917/plausiden-mcp"
+repository = "https://github.com/thepictishbeast/plausiden-mcp"
 description = "MCP server exposing PlausiDen's plausible deniability engine to any MCP client"
 
 [[bin]]
